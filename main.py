@@ -84,10 +84,10 @@ def main(args):
         config.read([args_parsed.ini])
         try:
             session.load_oauth_session(
-                config['session']['id'],
                 config['session']['token_type'],
                 config['session']['access_token'],
-                config['session'].get('refresh_token', None)
+                config['session'].get('refresh_token', None),
+                config['session'].get('expiry_time', None)
             )
         except KeyError:
             print('supplied configuration to restore session is incomplete')
@@ -103,10 +103,10 @@ def main(args):
               'supply the following information via an INI file:')
         print()
         print(f'[session]')
-        print(f'id = {session.session_id }')
         print(f'token_type = {session.token_type}')
         print(f'access_token = {session.access_token}')
         print(f'refresh_token = {session.refresh_token}')
+        print(f'expiry_time = {session.expiry_time}')
         print()
 
 
