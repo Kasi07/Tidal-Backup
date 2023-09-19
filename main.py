@@ -6,11 +6,12 @@ import json
 import sys
 from pathlib import Path
 import requests
+import datetime
 
 import tidalapi
 
 
-def backup(session, filename, backup_dir = Path().cwd() / 'backup'):
+def backup(session, filename, backup_dir = Path().cwd() / f'backup_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}'):
     # Create backup directory if it doesn't exist
     backup_dir.mkdir(parents=True, exist_ok=True)
     tidal_favorites = dict(albums=[], artists=[], tracks=[], playlists=[])
@@ -41,7 +42,7 @@ def backup(session, filename, backup_dir = Path().cwd() / 'backup'):
                 if r.status_code == 200:
                     images_dir = backup_dir / 'images'
                     images_dir.mkdir(parents=True, exist_ok=True)
-                    with open(images_dir / f'{e.id}.jpg', 'wb') as f:
+                    with open(images_dir / f'{e.name}_{e.id}.jpg', 'wb') as f:
                         f.write(r.content)
             if e.square_picture:
                 url = e.wide_image()
@@ -49,7 +50,7 @@ def backup(session, filename, backup_dir = Path().cwd() / 'backup'):
                 if r.status_code == 200:
                     images_wide_dir = backup_dir / 'images_wide'
                     images_wide_dir.mkdir(parents=True, exist_ok=True)
-                    with open(backup_dir / 'images_wide' / f'{e.id}_wide.jpg', 'wb') as f:
+                    with open(backup_dir / 'images_wide' / f'{e.name}_{e.id}_wide.jpg', 'wb') as f:
                         f.write(r.content)
             if e.num_tracks + e.num_videos > 0:
                 playlist_data['items'] = []
