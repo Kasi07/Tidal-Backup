@@ -4,11 +4,15 @@ import argparse
 from configparser import ConfigParser
 import json
 import sys
+from pathlib import Path
+import requests
 
 import tidalapi
 
 
-def backup(session, filename):
+def backup(session, filename, backup_dir = Path().cwd() / 'backup'):
+    # Create backup directory if it doesn't exist
+    backup_dir.mkdir(parents=True, exist_ok=True)
     tidal_favorites = dict(albums=[], artists=[], tracks=[], playlists=[])
     artists = session.user.favorites.artists()
     for e in artists:
@@ -24,9 +28,33 @@ def backup(session, filename):
 
     playlists = session.user.favorites.playlists()
     for e in playlists:
-        tidal_favorites['playlists'].append(dict(name=e.name, id=e.id))
+        playlist_data = dict()
+        playlist_data['name'] = e.name
+        playlist_data['id'] = e.id
+        playlist_data['owned'] = e.creator.name == "me"
+        playlist_data['public'] = True if e.public else False
+        if playlist_data['owned']:
+            playlist_data['description'] = e.description
+            if e.picture:
+                url = e.image(dimensions=1080)
+                r = requests.get(url)
+                if r.status_code == 200:
+                    with open(backup_dir / f'{e.id}.jpg', 'wb') as f:
+                        f.write(r.content)
+            if e.square_picture:
+                url = e.wide_image()
+                r = requests.get(url)
+                if r.status_code == 200:
+                    with open(backup_dir / f'{e.id}_wide.jpg', 'wb') as f:
+                        f.write(r.content)
+            if e.num_tracks + e.num_videos > 0:
+                playlist_data['items'] = []
+                for i in range(0, e.num_tracks + e.num_videos, 100):
+                    playlist_data['items'] += [dict(name=item.name, id=item.id) for item in e.items(offset = i+1 if i else 0)]
+                        
+        tidal_favorites['playlists'].append(playlist_data)
 
-    with open(filename, 'w') as outfile:
+    with open(backup_dir / filename, 'w') as outfile:
         json.dump(tidal_favorites, outfile, indent=4)
     print(tidal_favorites)
 
