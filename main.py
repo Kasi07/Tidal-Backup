@@ -39,13 +39,17 @@ def backup(session, filename, backup_dir = Path().cwd() / 'backup'):
                 url = e.image(dimensions=1080)
                 r = requests.get(url)
                 if r.status_code == 200:
-                    with open(backup_dir / f'{e.id}.jpg', 'wb') as f:
+                    images_dir = backup_dir / 'images'
+                    images_dir.mkdir(parents=True, exist_ok=True)
+                    with open(images_dir / f'{e.id}.jpg', 'wb') as f:
                         f.write(r.content)
             if e.square_picture:
                 url = e.wide_image()
                 r = requests.get(url)
                 if r.status_code == 200:
-                    with open(backup_dir / f'{e.id}_wide.jpg', 'wb') as f:
+                    images_wide_dir = backup_dir / 'images_wide'
+                    images_wide_dir.mkdir(parents=True, exist_ok=True)
+                    with open(backup_dir / 'images_wide' / f'{e.id}_wide.jpg', 'wb') as f:
                         f.write(r.content)
             if e.num_tracks + e.num_videos > 0:
                 playlist_data['items'] = []
